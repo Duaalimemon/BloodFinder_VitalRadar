@@ -215,16 +215,15 @@ export const NovaAssistant: React.FC = () => {
             </div>
 
             {/* Input Area */}
-            <div className="p-6 border-t border-slate-50 bg-white">
-              <div className="flex gap-2 p-1.5 bg-slate-50 rounded-2xl border border-slate-100 focus-within:border-slate-900 transition-all shadow-inner">
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="Ask Nova anything..."
-                  className="flex-1 bg-transparent border-none outline-none px-4 py-2.5 text-sm font-medium text-white placeholder-slate-400"
-                />
+            <div className="flex gap-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200 focus-within:border-slate-400 transition-all">
+            <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+            placeholder="Ask Nova anything..."
+            className="flex-1 bg-transparent border-none outline-none px-4 py-2.5 text-sm font-medium text-slate-800 placeholder-slate-500"
+            />
                 <button
                   onClick={handleSend}
                   disabled={!input.trim() || isLoading}

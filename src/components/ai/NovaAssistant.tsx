@@ -222,7 +222,7 @@ export const NovaAssistant: React.FC = () => {
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Ask Nova anything..."
-            className="flex-1 bg-transparent border-none outline-none px-4 py-2.5 text-sm font-medium text-slate-800 placeholder-slate-500"
+            className="flex-1 bg-transparent border-none outline-none px-4 py-2.5 text-sm font-medium text-blue-900 placeholder-blue-700/50"
             />
                 <button
                   onClick={handleSend}

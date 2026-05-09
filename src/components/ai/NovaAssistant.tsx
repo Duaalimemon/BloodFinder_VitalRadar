@@ -213,32 +213,31 @@ export const NovaAssistant: React.FC = () => {
                 </button>
               ))}
             </div>
-
-            {/* Input Area */}
+           {/* Input Area */}
+          <div className="p-6 border-t border-slate-50 bg-white">
             <div className="flex gap-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200 focus-within:border-slate-400 transition-all">
-            <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Ask Nova anything..."
-            className="flex-1 bg-transparent border-none outline-none px-4 py-2.5 text-sm font-medium text-blue-900 placeholder-blue-700/50"
-            />
-                <button
-                  onClick={handleSend}
-                  disabled={!input.trim() || isLoading}
-                  className="w-12 h-12 bg-slate-900 text-white rounded-xl flex items-center justify-center hover:bg-black disabled:opacity-50 transition-all flex-shrink-0 shadow-lg"
-                >
-                  <Send className="w-5 h-5" />
-                </button>
-              </div>
-              <p className="text-[9px] text-center text-slate-300 font-bold uppercase tracking-widest mt-4">
-                <ShieldAlert className="w-3 h-3 inline mr-1" /> System guidance is advisory only.
-              </p>
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                placeholder="Ask Nova anything..."
+                className="flex-1 bg-transparent border-none outline-none px-4 py-2.5 text-sm font-medium text-blue-900 placeholder-blue-700/50"
+              />
+              <button
+                onClick={handleSend}
+                disabled={!input.trim() || isLoading}
+                className="w-12 h-12 bg-slate-900 text-white rounded-xl flex items-center justify-center hover:bg-black disabled:opacity-50 transition-all flex-shrink-0 shadow-lg"
+              >
+                <Send className="w-5 h-5" />
+              </button>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+            <p className="text-[9px] text-center text-slate-300 font-bold uppercase tracking-widest mt-4">
+              <ShieldAlert className="w-3 h-3 inline mr-1" /> System guidance is advisory only.
+            </p>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };

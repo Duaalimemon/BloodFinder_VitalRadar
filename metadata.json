@@ -1,0 +1,8 @@
+{
+  "name": "VitalRadarBloodFinder",
+  "description": "A high-stakes emergency blood distribution and response network with real-time tactical radar and SOS broadcast capabilities.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": []
+}

@@ -1,0 +1,82 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Represents a citizen who can be a donor or requester.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Full name of the user" },
+        "email": { "type": "string", "format": "email" },
+        "bloodType": { "type": "string", "enum": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] },
+        "phone": { "type": "string" },
+        "lastDonatedDate": { "type": "string", "format": "date-time" },
+        "isAvailable": { "type": "boolean" },
+        "geohash": { "type": "string" },
+        "lat": { "type": "number" },
+        "lng": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "bloodType", "isAvailable", "geohash", "lat", "lng"]
+    },
+    "Emergency": {
+      "title": "Emergency Request",
+      "description": "An urgent request for blood donation.",
+      "type": "object",
+      "properties": {
+        "requesterUid": { "type": "string" },
+        "requesterName": { "type": "string" },
+        "bloodType": { "type": "string" },
+        "urgencyLevel": { "type": "string", "enum": ["Critical", "Urgent", "Stable"] },
+        "status": { "type": "string", "enum": ["Pending", "Fulfilled", "Cancelled"] },
+        "geohash": { "type": "string" },
+        "lat": { "type": "number" },
+        "lng": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["requesterUid", "bloodType", "urgencyLevel", "status", "geohash", "lat", "lng", "createdAt"]
+    },
+    "BloodBank": {
+      "title": "Medical Facility",
+      "description": "A verified blood bank or hospital with inventory management.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "address": { "type": "string" },
+        "phone": { "type": "string" },
+        "ownerUid": { "type": "string", "description": "UID of the user authorized to manage this facility" },
+        "inventory": { 
+          "type": "object",
+          "properties": {
+            "A+": { "type": "integer" },
+            "A-": { "type": "integer" },
+            "B+": { "type": "integer" },
+            "B-": { "type": "integer" },
+            "AB+": { "type": "integer" },
+            "AB-": { "type": "integer" },
+            "O+": { "type": "integer" },
+            "O-": { "type": "integer" }
+          }
+        },
+        "geohash": { "type": "string" },
+        "lat": { "type": "number" },
+        "lng": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "ownerUid", "inventory", "geohash", "lat", "lng"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Collection of user profiles and donor info."
+    },
+    "/emergencies/{emergencyId}": {
+      "schema": "Emergency",
+      "description": "Collection of active emergency blood requests."
+    },
+    "/bloodBanks/{bankId}": {
+      "schema": "BloodBank",
+      "description": "Collection of verified hospitals and blood banks."
+    }
+  }
+}

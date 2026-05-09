@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-brand-red: #8B0000;
+  --color-brand-teal: #2F4F4F;
+  --color-brand-dark: #0F172A;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  html.dark {
+    color-scheme: dark;
+  }
+  
+  body {
+    @apply antialiased scroll-smooth transition-colors duration-300 bg-white dark:bg-brand-dark text-slate-900 dark:text-slate-100;
+  }
+}
+
+.radar-scan {
+  background: conic-gradient(from 0deg at 50% 50%, rgba(139, 0, 0, 0.1) 0deg, rgba(139, 0, 0, 0) 90deg);
+  animation: rotate-radar 4s linear infinite;
+}
+
+@keyframes rotate-radar {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.glass-panel {
+  @apply bg-white/80 backdrop-blur-md border border-white/20;
+}
+
+.markdown-content p {
+  @apply mb-3 last:mb-0;
+}
+
+.markdown-content ul {
+  @apply list-disc list-inside mb-3 space-y-1;
+}
+
+.markdown-content strong {
+  @apply font-black text-slate-900;
+}
+
+.markdown-content code {
+  @apply bg-slate-100 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold text-red-900;
+}

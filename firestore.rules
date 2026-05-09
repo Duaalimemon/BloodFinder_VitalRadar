@@ -1,0 +1,138 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Global Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      // Mandate email verification for all write operations
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      // Role check against authorized admin emails
+      return isSignedIn() && request.auth.token.email in ['memonduaa544@gmail.com'];
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Connectivity Test ---
+    match /test/{docId} {
+      allow get: if true;
+    }
+
+    // --- User Rules ---
+    function isValidUser(data) {
+      return data.keys().hasAll(['name', 'email', 'bloodType', 'isAvailable', 'geohash', 'lat', 'lng']) &&
+             data.name is string && data.name.size() <= 100 &&
+             data.email is string && data.email.size() <= 150 &&
+             data.bloodType is string &&
+             data.isAvailable is bool &&
+             data.geohash is string && data.geohash.size() <= 20 &&
+             data.lat is number && data.lng is number;
+    }
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && (isOwner(userId) || isAdmin() || existing().get('isAvailable', false) == true);
+      
+      // Enforce query filters for listing donors or self-lookup
+      allow list: if isSignedIn() && (
+        resource.data.get('isAvailable', false) == true || 
+        resource.data.email == request.auth.token.email || 
+        isAdmin()
+      );
+
+      allow create: if isOwner(userId) && isEmailVerified() && isValidUser(incoming());
+      
+      allow update: if (isOwner(userId) || isAdmin()) && isEmailVerified() && (
+        incoming().diff(existing()).affectedKeys().hasAny(['name', 'bloodType', 'phone', 'isAvailable', 'geohash', 'lat', 'lng', 'updatedAt', 'pushToken']) &&
+        incoming().email == existing().email
+      );
+    }
+
+    // --- Emergency Rules ---
+    function isValidEmergency(data) {
+      return data.keys().hasAll(['requesterUid', 'requesterName', 'bloodType', 'urgencyLevel', 'phone', 'hospitalName', 'patientName', 'status', 'geohash', 'lat', 'lng', 'createdAt']) &&
+             data.requesterUid == request.auth.uid &&
+             data.status == 'Pending' &&
+             data.createdAt == request.time &&
+             data.phone is string && data.phone.size() <= 20 &&
+             data.hospitalName is string && data.hospitalName.size() <= 200 &&
+             data.patientName is string && data.patientName.size() <= 100;
+    }
+
+    match /emergencies/{emergencyId} {
+      allow get: if isSignedIn();
+      
+      // Enforce status filter or ownership for listing
+      allow list: if isSignedIn() && (
+        resource.data.status == 'Pending' || 
+        resource.data.requesterUid == request.auth.uid || 
+        isAdmin()
+      );
+
+      allow create: if isSignedIn() && isEmailVerified() && isValidEmergency(incoming());
+      
+      allow update: if isSignedIn() && isEmailVerified() && (
+        (existing().requesterUid == request.auth.uid || isAdmin()) &&
+        incoming().diff(existing()).affectedKeys().hasAny(['status', 'resolvedAt', 'resolvedBy', 'deletedAt', 'deletedBy']) &&
+        incoming().requesterUid == existing().requesterUid &&
+        (incoming().status in ['Resolved', 'Fulfilled', 'Cancelled', 'Deleted'])
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    // --- Blood Bank Rules ---
+    function isValidBloodBank(data) {
+      return data.keys().hasAll(['name', 'ownerUid', 'inventory', 'geohash', 'lat', 'lng']) &&
+             data.ownerUid == request.auth.uid &&
+             data.inventory is map &&
+             data.inventory.get('A+', 0) is int &&
+             data.inventory.get('B+', 0) is int &&
+             data.inventory.get('O+', 0) is int &&
+             data.inventory.get('AB+', 0) is int &&
+             data.inventory.get('A-', 0) is int &&
+             data.inventory.get('B-', 0) is int &&
+             data.inventory.get('O-', 0) is int &&
+             data.inventory.get('AB-', 0) is int &&
+             data.lat is number && data.lng is number;
+    }
+
+    match /bloodBanks/{bankId} {
+      allow read: if isSignedIn();
+      
+      allow create: if isEmailVerified() && isValidBloodBank(incoming());
+      
+      allow update: if isEmailVerified() && (
+        (existing().ownerUid == request.auth.uid || isAdmin()) &&
+        incoming().diff(existing()).affectedKeys().hasAny(['inventory', 'name', 'address', 'phone', 'geohash', 'lat', 'lng', 'updatedAt']) &&
+        incoming().ownerUid == existing().ownerUid
+      );
+
+      allow delete: if isAdmin();
+    }
+  }
+}

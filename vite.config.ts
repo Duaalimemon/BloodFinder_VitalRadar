@@ -18,11 +18,12 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
+      // Is array mein dono hosts add kar diye hain
       allowedHosts: [
         "blood-finder-dua.loca.lt", 
-        "duaa23-vitalradar.hf.space" // Hugging Face Host
+        "duaa23-vitalradar.hf.space"
       ],
       hmr: process.env.DISABLE_HMR !== 'true',
-    }
+    },
   };
 });

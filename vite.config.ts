@@ -17,8 +17,12 @@ export default defineConfig(({mode}) => {
       },
     },
     server: {
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
+      allowedHosts: [
+        "blood-finder-dua.loca.lt", // Purana local link (rehne dein bhale)
+        "duaa23-vitalradar.hf.space" // Naya Hugging Face link (Bina https:// ke)
+      ],
+      // ... baqi settings
+    },
       hmr: process.env.DISABLE_HMR !== 'true',
     },
   };

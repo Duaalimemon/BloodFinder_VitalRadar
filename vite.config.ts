@@ -17,8 +17,9 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(__dirname, '.'),
       },
     },
-    server: {
-      // Is array mein dono hosts add kar diye hain
+   server: {
+      strictPort: true, // Ye add karein
+      host: "0.0.0.0",  // Ye Hugging Face ke liye zaroori hai
       allowedHosts: [
         "blood-finder-dua.loca.lt", 
         "duaa23-vitalradar.hf.space"

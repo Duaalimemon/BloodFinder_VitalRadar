@@ -12,11 +12,11 @@ async function startServer() {
   const app = express();
   const httpServer = createServer(app);
   const io = new Server(httpServer, {
-    cors: {
-      origin: "*",
-      methods: ["GET", "POST"]
-    }
-  });
+  cors: {
+    origin: ["http://localhost:5173", "https://blood-finder-dua.loca.lt"], // Apna link yahan add kar dein
+    methods: ["GET", "POST"]
+  }
+});
 
   const PORT = 3000;
 

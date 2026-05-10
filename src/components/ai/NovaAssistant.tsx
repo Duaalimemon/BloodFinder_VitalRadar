@@ -4,16 +4,6 @@ import { X, Send, Sparkles, Loader2, Bot, ShieldAlert } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import Markdown from 'react-markdown';
 
-const getAiClient = () => {
-  const apiKey = (process.env.GEMINI_API_KEY) || (import.meta as any).env?.VITE_GEMINI_API_KEY;
-  if (!apiKey) {
-    console.warn("GEMINI_API_KEY or VITE_GEMINI_API_KEY not found in environment.");
-  }
-  return new GoogleGenAI(apiKey || 'MISSING_KEY');
-};
-
-const ai = getAiClient();
-
 interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -28,36 +18,34 @@ export const NovaAssistant: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const hasApiKey = !!((process.env.GEMINI_API_KEY) || (import.meta as any).env?.VITE_GEMINI_API_KEY);
-
+  // Auto-scroll to bottom on new messages
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
 
+  // Prevent background scrolling when sidebar is open
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
+    document.body.style.overflow = isOpen ? 'hidden' : 'unset';
+    return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
 
   const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+    const trimmedInput = input.trim();
+    if (!trimmedInput || isLoading) return;
 
-    const userMsg = input.trim();
+    // 1. Get API Key from Vite environment
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+    // 2. Update UI with user message
+    setMessages(prev => [...prev, { role: 'user', content: trimmedInput }]);
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
-    
-    if (!hasApiKey) {
+
+    if (!apiKey) {
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: "**System Configuration Required:** Please check your API key." 
+        content: "**System Error:** `VITE_GEMINI_API_KEY` is not defined in your .env file." 
       }]);
       return;
     }
@@ -65,15 +53,24 @@ export const NovaAssistant: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const result = await model.generateContent(userMsg);
+      // 3. Initialize AI only when the function is called to avoid top-level browser errors
+      const genAI = new GoogleGenAI(apiKey);
+      const model = genAI.getGenerativeModel({ 
+        model: "gemini-1.5-flash",
+        systemInstruction: "You are Nova, a professional tactical assistant for VitalRadar. Keep responses punchy and use terms like 'Protocol' and 'Sector'."
+      });
+
+      const result = await model.generateContent(trimmedInput);
       const response = await result.response;
       const text = response.text();
 
       setMessages(prev => [...prev, { role: 'assistant', content: text }]);
     } catch (error) {
       console.error("Gemini Error:", error);
-      setMessages(prev => [...prev, { role: 'assistant', content: "Neural link fractured. Recalibrating core..." }]);
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: "Neural link fractured. Please verify your API key and connection." 
+      }]);
     } finally {
       setIsLoading(false);
     }
@@ -108,6 +105,7 @@ export const NovaAssistant: React.FC = () => {
           >
             <div className="absolute inset-0 bg-red-900/20 scale-y-0 group-hover:scale-y-100 transition-transform origin-bottom duration-500" />
             <Bot className="w-6 h-6 relative z-10" />
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-slate-900" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -125,10 +123,15 @@ export const NovaAssistant: React.FC = () => {
             {/* Header */}
             <div className="p-8 bg-slate-900 text-white flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <Sparkles className="w-6 h-6 text-red-400" />
-                <h3 className="font-black text-base uppercase">Nova Assistant</h3>
+                <div className="w-10 h-10 bg-red-900/50 rounded-xl flex items-center justify-center">
+                  <Sparkles className="w-6 h-6 text-red-400" />
+                </div>
+                <div>
+                  <h3 className="font-black text-base uppercase">Nova <span className="text-red-500">Assistant</span></h3>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Core Online</p>
+                </div>
               </div>
-              <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-white/20 rounded-xl">
+              <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -138,34 +141,45 @@ export const NovaAssistant: React.FC = () => {
               {messages.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[85%] p-4 rounded-3xl text-sm ${
-                    msg.role === 'user' ? 'bg-slate-900 text-white rounded-tr-none' : 'bg-white border border-slate-100 text-slate-800 rounded-tl-none'
+                    msg.role === 'user' 
+                      ? 'bg-slate-900 text-white rounded-tr-none' 
+                      : 'bg-white border border-slate-100 text-slate-800 rounded-tl-none shadow-sm'
                   }`}>
-                    <Markdown>{msg.content}</Markdown>
+                    <Markdown className="prose prose-sm max-w-none">{msg.content}</Markdown>
                   </div>
                 </div>
               ))}
-              {isLoading && <Loader2 className="w-4 h-4 animate-spin mx-auto text-slate-400" />}
+              {isLoading && (
+                <div className="flex items-center gap-2 text-slate-400 p-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="text-xs font-bold uppercase tracking-widest">Analyzing...</span>
+                </div>
+              )}
             </div>
 
             {/* Input Area */}
-            <div className="p-6 border-t border-slate-50 bg-white">
-              <div className="flex gap-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200">
+            <div className="p-6 border-t border-slate-100 bg-white">
+              <div className="flex gap-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200 focus-within:border-slate-400 transition-all">
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                   placeholder="Ask Nova anything..."
-                  className="flex-1 bg-transparent border-none outline-none px-4 py-2.5 text-sm font-bold text-[#001f3f] placeholder-slate-400"
+                  // Dark Blue text for Light Mode, light blue for Dark Mode
+                  className="flex-1 bg-transparent border-none outline-none px-4 py-2.5 text-sm font-bold text-[#001f3f] dark:text-blue-100 placeholder-slate-400"
                 />
                 <button
                   onClick={handleSend}
                   disabled={!input.trim() || isLoading}
-                  className="w-12 h-12 bg-slate-900 text-white rounded-xl flex items-center justify-center"
+                  className="w-12 h-12 bg-slate-900 text-white rounded-xl flex items-center justify-center hover:bg-black disabled:opacity-50 transition-all shadow-lg"
                 >
                   <Send className="w-5 h-5" />
                 </button>
               </div>
+              <p className="text-[9px] text-center text-slate-300 font-bold uppercase tracking-widest mt-4 flex items-center justify-center gap-1">
+                <ShieldAlert className="w-3 h-3" /> Advisory only.
+              </p>
             </div>
           </motion.div>
         )}

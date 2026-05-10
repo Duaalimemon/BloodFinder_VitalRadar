@@ -13,7 +13,7 @@ async function startServer() {
   const httpServer = createServer(app);
   const io = new Server(httpServer, {
     cors: {
-      origin: "https://blood-finder-vital-radar.vercel.app",
+      origin: "*",
       methods: ["GET", "POST"]
     }
   });
